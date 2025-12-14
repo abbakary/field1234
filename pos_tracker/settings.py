@@ -229,14 +229,6 @@ CORS_ALLOWED_ORIGINS = [
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 
-# Logging for imports
-import logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(name)s: %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 # Logging configuration
 LOGGING = {
     'version': 1,
