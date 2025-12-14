@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import pymysql
+import logging
 
 # Apply compatibility monkeypatch for Django template Context on Python 3.14+
 # Importing tracker.patches.django_compat applies the safe __copy__ at startup.
