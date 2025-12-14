@@ -38,9 +38,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
-    
+
     final success = await context.read<AuthProvider>().login(
-      email: _emailController.text,
+      username: _emailController.text,
       password: _passwordController.text,
     );
 
