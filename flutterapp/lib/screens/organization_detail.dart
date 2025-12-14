@@ -6,7 +6,7 @@ import '../providers/application_provider.dart';
 import '../theme/app_theme.dart';
 
 class OrganizationDetailScreen extends StatefulWidget {
-  final String organizationId;
+  final int organizationId;
 
   const OrganizationDetailScreen({
     Key? key,
