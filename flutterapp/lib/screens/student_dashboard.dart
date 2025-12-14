@@ -30,13 +30,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   void _initializeData() async {
     final student = context.read<AuthProvider>().currentStudent;
     if (student != null) {
-      await context.read<ApplicationProvider>().fetchApplications(student.id);
-      await context.read<OrganizationProvider>().fetchMatchedOrganizations(
-        course: student.course,
-        level: student.level,
-        skills: student.skills,
-        location: student.preferredLocation,
-      );
+      await context.read<ApplicationProvider>().fetchApplications();
     }
   }
 
