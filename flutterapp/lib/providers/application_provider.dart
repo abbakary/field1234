@@ -1,16 +1,21 @@
 import 'package:flutter/foundation.dart';
 import '../models/application.dart';
+import '../services/api_service.dart';
 
 class ApplicationProvider extends ChangeNotifier {
   List<Application> _applications = [];
   Application? _selectedApplication;
   bool _isLoading = false;
   String? _errorMessage;
+  int _currentPage = 1;
+  int _totalPages = 1;
 
   List<Application> get applications => _applications;
   Application? get selectedApplication => _selectedApplication;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  int get currentPage => _currentPage;
+  int get totalPages => _totalPages;
 
   int get pendingApplications =>
       _applications.where((app) => app.status == ApplicationStatus.pending).length;
@@ -18,155 +23,257 @@ class ApplicationProvider extends ChangeNotifier {
       _applications.where((app) => app.status == ApplicationStatus.accepted).length;
   int get rejectedApplications =>
       _applications.where((app) => app.status == ApplicationStatus.rejected).length;
+  int get completedApplications =>
+      _applications.where((app) => app.status == ApplicationStatus.completed).length;
 
-  Future<void> fetchApplications(String studentId) async {
-    try {
-      _isLoading = true;
-      _errorMessage = null;
-      notifyListeners();
-
-      await Future.delayed(const Duration(milliseconds: 1500));
-
-      _applications = _generateMockApplications();
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> applyToOrganization({
-    required String studentId,
-    required String organizationId,
-    required String organizationName,
+  Future<void> fetchApplications({
+    int? student,
+    int? organization,
+    String? status,
+    String? search,
+    int page = 1,
   }) async {
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
 
-      await Future.delayed(const Duration(milliseconds: 1200));
-
-      final newApplication = Application(
-        id: '${DateTime.now().millisecondsSinceEpoch}',
-        studentId: studentId,
-        organizationId: organizationId,
-        studentName: 'John Doe',
-        organizationName: organizationName,
-        status: ApplicationStatus.pending,
-        matchScore: '85',
-        matchType: 'Highly Matched',
-        appliedAt: DateTime.now(),
+      final result = await ApiService.getApplications(
+        student: student,
+        organization: organization,
+        status: status,
+        search: search,
+        page: page,
       );
 
-      _applications.insert(0, newApplication);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
-  }
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        
+        // Handle pagination
+        if (data.containsKey('results')) {
+          // Standard DRF pagination response
+          final results = data['results'] as List;
+          _applications = results.map((app) {
+            return Application.fromJson(app as Map<String, dynamic>);
+          }).toList();
+          
+          // Extract pagination info
+          _currentPage = page;
+          _totalPages = ((data['count'] ?? 0) as int) ~/ 20 + 1;
+        } else if (data is List) {
+          // Simple list response
+          _applications = data.map((app) {
+            return Application.fromJson(app as Map<String, dynamic>);
+          }).toList();
+        } else {
+          _applications = [];
+        }
 
-  Future<void> getApplicationDetail(String id) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      _selectedApplication =
-          _applications.firstWhere((app) => app.id == id);
-
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> withdrawApplication(String applicationId) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      await Future.delayed(const Duration(milliseconds: 1000));
-
-      final index = _applications.indexWhere((app) => app.id == applicationId);
-      if (index != -1) {
-        _applications[index] = Application(
-          id: _applications[index].id,
-          studentId: _applications[index].studentId,
-          organizationId: _applications[index].organizationId,
-          studentName: _applications[index].studentName,
-          organizationName: _applications[index].organizationName,
-          status: ApplicationStatus.withdrawn,
-          matchScore: _applications[index].matchScore,
-          matchType: _applications[index].matchType,
-          appliedAt: _applications[index].appliedAt,
-          respondedAt: DateTime.now(),
-        );
+        _isLoading = false;
+        notifyListeners();
+      } else {
+        _errorMessage = result['error']?.toString() ?? 'Failed to fetch applications';
+        _isLoading = false;
+        notifyListeners();
       }
-
+    } catch (e) {
+      _errorMessage = 'Network error: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
-      return true;
+    }
+  }
+
+  Future<bool> applyToOpportunity({
+    required int trainingOpportunityId,
+  }) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final result = await ApiService.submitApplication(
+        trainingOpportunityId: trainingOpportunityId,
+      );
+
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        final newApplication = Application.fromJson(data);
+        _applications.insert(0, newApplication);
+        
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error']?.toString() ?? 'Failed to submit application';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = 'Network error: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
-  List<Application> _generateMockApplications() {
-    return [
-      Application(
-        id: '1',
-        studentId: '1',
-        organizationId: '1',
-        studentName: 'John Doe',
-        organizationName: 'TechCorp Tanzania',
-        status: ApplicationStatus.accepted,
-        matchScore: '92',
-        matchType: 'Highly Matched',
-        appliedAt: DateTime.now().subtract(const Duration(days: 5)),
-        respondedAt: DateTime.now().subtract(const Duration(days: 2)),
-        acceptanceLetter: 'Dear John, We are pleased to offer you...',
-        startDate: DateTime.now().add(const Duration(days: 30)),
-        endDate: DateTime.now().add(const Duration(days: 120)),
-      ),
-      Application(
-        id: '2',
-        studentId: '1',
-        organizationId: '2',
-        studentName: 'John Doe',
-        organizationName: 'Construction & Engineering Ltd',
-        status: ApplicationStatus.pending,
-        matchScore: '78',
-        matchType: 'Partially Matched',
-        appliedAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      Application(
-        id: '3',
-        studentId: '1',
-        organizationId: '3',
-        studentName: 'John Doe',
-        organizationName: 'Finance Solutions Africa',
-        status: ApplicationStatus.rejected,
-        matchScore: '55',
-        matchType: 'Not Eligible',
-        appliedAt: DateTime.now().subtract(const Duration(days: 10)),
-        respondedAt: DateTime.now().subtract(const Duration(days: 8)),
-        rejectionReason: 'Your skills do not match our current requirements.',
-      ),
-    ];
+  Future<void> getApplicationDetail(int id) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final result = await ApiService.getApplication(id);
+
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        _selectedApplication = Application.fromJson(data);
+
+        _isLoading = false;
+        notifyListeners();
+      } else {
+        _errorMessage = result['error']?.toString() ?? 'Failed to fetch application';
+        _isLoading = false;
+        notifyListeners();
+      }
+    } catch (e) {
+      _errorMessage = 'Network error: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> withdrawApplication(int applicationId) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final result = await ApiService.withdrawApplication(
+        applicationId: applicationId,
+      );
+
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        final updatedApplication = Application.fromJson(data);
+        
+        final index = _applications.indexWhere((app) => app.id == applicationId);
+        if (index != -1) {
+          _applications[index] = updatedApplication;
+        }
+
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error']?.toString() ?? 'Failed to withdraw application';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Network error: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> acceptApplication({
+    required int applicationId,
+    String? acceptanceLetter,
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final result = await ApiService.acceptApplication(
+        applicationId: applicationId,
+        acceptanceLetter: acceptanceLetter,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        final updatedApplication = Application.fromJson(data);
+        
+        final index = _applications.indexWhere((app) => app.id == applicationId);
+        if (index != -1) {
+          _applications[index] = updatedApplication;
+        }
+
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error']?.toString() ?? 'Failed to accept application';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Network error: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> rejectApplication({
+    required int applicationId,
+    String? reason,
+  }) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final result = await ApiService.rejectApplication(
+        applicationId: applicationId,
+        reason: reason,
+      );
+
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        final updatedApplication = Application.fromJson(data);
+        
+        final index = _applications.indexWhere((app) => app.id == applicationId);
+        if (index != -1) {
+          _applications[index] = updatedApplication;
+        }
+
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error']?.toString() ?? 'Failed to reject application';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Network error: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  void clear() {
+    _applications = [];
+    _selectedApplication = null;
+    _errorMessage = null;
+    _currentPage = 1;
+    _totalPages = 1;
+    notifyListeners();
   }
 }
