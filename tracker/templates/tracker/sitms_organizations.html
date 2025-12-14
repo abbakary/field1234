@@ -1,0 +1,509 @@
+{% extends 'tracker/base.html' %}
+{% load static %}
+
+{% block title %}Organizations - SITMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #2563EB;
+        --secondary: #7C3AED;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --light-bg: #F8FAFC;
+        --border-color: #E2E8F0;
+        --text-primary: #1E293B;
+        --text-secondary: #64748B;
+        --text-muted: #94A3B8;
+    }
+
+    .org-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        padding: 30px 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+    }
+
+    .org-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .org-header p {
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    .filter-section {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .filter-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .filter-input {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .filter-button {
+        padding: 10px 20px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .filter-button:hover {
+        background: #1d4ed8;
+    }
+
+    .org-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s;
+    }
+
+    .org-card:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
+    }
+
+    .org-card-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .org-logo {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 28px;
+        flex-shrink: 0;
+    }
+
+    .org-info h3 {
+        margin: 0 0 4px 0;
+        color: var(--text-primary);
+        font-size: 16px;
+    }
+
+    .org-info p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    .org-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 16px;
+        margin: 16px 0;
+        padding: 16px 0;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .stat {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+
+    .org-details {
+        margin: 16px 0;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 13px;
+    }
+
+    .detail-label {
+        color: var(--text-secondary);
+    }
+
+    .detail-value {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .badge-group {
+        margin: 12px 0;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-right: 6px;
+        margin-bottom: 6px;
+    }
+
+    .badge.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .badge.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .badge.primary {
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--primary);
+    }
+
+    .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: white;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn:hover {
+        background: var(--light-bg);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+    .add-button {
+        background: var(--primary);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        margin-bottom: 24px;
+        transition: all 0.2s;
+    }
+
+    .add-button:hover {
+        background: #1d4ed8;
+    }
+
+    .rating {
+        color: #FBBF24;
+    }
+
+    .slots-meter {
+        width: 100%;
+        height: 4px;
+        background: var(--border-color);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 4px;
+    }
+
+    .slots-filled {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 24px;">
+    <!-- Header -->
+    <div class="org-header">
+        <h1>Organizations Management</h1>
+        <p>Manage partner organizations and their training opportunities</p>
+    </div>
+
+    <!-- Add Organization Button -->
+    <button class="add-button">+ Register New Organization</button>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-group">
+            <input type="text" class="filter-input" placeholder="Search organizations..." />
+            <select class="filter-input">
+                <option>All Industries</option>
+                <option>Information Technology</option>
+                <option>Engineering</option>
+                <option>Finance</option>
+                <option>Healthcare</option>
+                <option>Agriculture</option>
+            </select>
+            <select class="filter-input">
+                <option>All Statuses</option>
+                <option>Active</option>
+                <option>Inactive</option>
+            </select>
+            <button class="filter-button">🔍 Search</button>
+        </div>
+    </div>
+
+    <!-- Organizations List -->
+    <div>
+        <!-- Organization Card 1 -->
+        <div class="org-card">
+            <div class="org-card-header">
+                <div class="org-logo">💻</div>
+                <div class="org-info">
+                    <h3>TechCorp Tanzania</h3>
+                    <p>Information Technology | Dar es Salaam</p>
+                </div>
+                <div style="margin-left: auto;">
+                    <span class="rating">⭐ 4.8</span> (45 reviews)
+                </div>
+            </div>
+
+            <div class="org-stats">
+                <div class="stat">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">Total Slots</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Available</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Applications</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Placed</div>
+                </div>
+            </div>
+
+            <div class="org-details">
+                <div class="detail-row">
+                    <span class="detail-label">Training Duration:</span>
+                    <span class="detail-value">3 months</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Supported Courses:</span>
+                    <span class="detail-value">IT, Software Engineering</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Contact:</span>
+                    <span class="detail-value">careers@techcorp.co.tz | +255 123 456 789</span>
+                </div>
+            </div>
+
+            <div class="badge-group">
+                <span class="badge primary">Verified Organization</span>
+                <span class="badge success">Active</span>
+            </div>
+
+            <div style="margin: 12px 0;">
+                <small style="color: var(--text-secondary);">Slots Used</small>
+                <div class="slots-meter">
+                    <div class="slots-filled" style="width: 70%;"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn">📋 View Details</button>
+                <button class="btn">✏️ Edit</button>
+                <button class="btn">👥 View Applications</button>
+                <button class="btn">📊 Analytics</button>
+            </div>
+        </div>
+
+        <!-- Organization Card 2 -->
+        <div class="org-card">
+            <div class="org-card-header">
+                <div class="org-logo" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">🏗️</div>
+                <div class="org-info">
+                    <h3>Construction & Engineering Ltd</h3>
+                    <p>Engineering | Dar es Salaam</p>
+                </div>
+                <div style="margin-left: auto;">
+                    <span class="rating">⭐ 4.6</span> (32 reviews)
+                </div>
+            </div>
+
+            <div class="org-stats">
+                <div class="stat">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Total Slots</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Available</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">9</div>
+                    <div class="stat-label">Applications</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Placed</div>
+                </div>
+            </div>
+
+            <div class="org-details">
+                <div class="detail-row">
+                    <span class="detail-label">Training Duration:</span>
+                    <span class="detail-value">4 months</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Supported Courses:</span>
+                    <span class="detail-value">Civil Engineering, Mechanical Engineering</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Contact:</span>
+                    <span class="detail-value">internship@ceeng.co.tz | +255 987 654 321</span>
+                </div>
+            </div>
+
+            <div class="badge-group">
+                <span class="badge primary">Verified Organization</span>
+                <span class="badge success">Active</span>
+            </div>
+
+            <div style="margin: 12px 0;">
+                <small style="color: var(--text-secondary);">Slots Used</small>
+                <div class="slots-meter">
+                    <div class="slots-filled" style="width: 37.5%;"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn">📋 View Details</button>
+                <button class="btn">✏️ Edit</button>
+                <button class="btn">👥 View Applications</button>
+                <button class="btn">📊 Analytics</button>
+            </div>
+        </div>
+
+        <!-- Organization Card 3 -->
+        <div class="org-card">
+            <div class="org-card-header">
+                <div class="org-logo" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);">💰</div>
+                <div class="org-info">
+                    <h3>Finance Solutions Africa</h3>
+                    <p>Finance & Banking | Dar es Salaam</p>
+                </div>
+                <div style="margin-left: auto;">
+                    <span class="rating">⭐ 4.5</span> (28 reviews)
+                </div>
+            </div>
+
+            <div class="org-stats">
+                <div class="stat">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Total Slots</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Available</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">22</div>
+                    <div class="stat-label">Applications</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Placed</div>
+                </div>
+            </div>
+
+            <div class="org-details">
+                <div class="detail-row">
+                    <span class="detail-label">Training Duration:</span>
+                    <span class="detail-value">3 months</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Supported Courses:</span>
+                    <span class="detail-value">Accounting, Business Administration, Finance</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Contact:</span>
+                    <span class="detail-value">careers@financeafrica.co.tz | +255 555 666 777</span>
+                </div>
+            </div>
+
+            <div class="badge-group">
+                <span class="badge primary">Verified Organization</span>
+                <span class="badge success">Active</span>
+            </div>
+
+            <div style="margin: 12px 0;">
+                <small style="color: var(--text-secondary);">Slots Used</small>
+                <div class="slots-meter">
+                    <div class="slots-filled" style="width: 46.7%;"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn">📋 View Details</button>
+                <button class="btn">✏️ Edit</button>
+                <button class="btn">👥 View Applications</button>
+                <button class="btn">📊 Analytics</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

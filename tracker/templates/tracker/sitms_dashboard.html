@@ -1,0 +1,602 @@
+{% extends 'tracker/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load date_filters %}
+
+{% block title %}SITMS - Smart Industrial Training Matching System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #2563EB;
+        --secondary: #7C3AED;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --info: #06B6D4;
+        --light-bg: #F8FAFC;
+        --border-color: #E2E8F0;
+        --text-primary: #1E293B;
+        --text-secondary: #64748B;
+        --text-muted: #94A3B8;
+    }
+
+    * {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    body {
+        background-color: var(--light-bg);
+    }
+
+    .sitms-hero {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        padding: 40px 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .sitms-hero h1 {
+        margin: 0 0 8px 0;
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .sitms-hero p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 16px;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    }
+
+    .kpi-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .kpi-icon.primary {
+        background-color: rgba(37, 99, 235, 0.1);
+        color: var(--primary);
+    }
+
+    .kpi-icon.success {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .kpi-icon.warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .kpi-icon.info {
+        background-color: rgba(6, 182, 212, 0.1);
+        color: var(--info);
+    }
+
+    .kpi-content h3 {
+        margin: 0 0 4px 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .kpi-content .number {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 16px 0;
+    }
+
+    .card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .card-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+        background: white;
+    }
+
+    .card-header h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .table thead th {
+        background-color: var(--light-bg);
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table tbody td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .table tbody tr:hover {
+        background-color: var(--light-bg);
+    }
+
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge.badge-success {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .badge.badge-warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .badge.badge-danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .badge.badge-info {
+        background-color: rgba(6, 182, 212, 0.1);
+        color: var(--info);
+    }
+
+    .badge.badge-primary {
+        background-color: rgba(37, 99, 235, 0.1);
+        color: var(--primary);
+    }
+
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-small:hover {
+        background: var(--light-bg);
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+
+    .match-score {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .match-score.high {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .match-score.medium {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .match-score.low {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .stat-item {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+    .stat-value {
+        color: var(--text-primary);
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .button-group button,
+    .button-group a {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .button-group button:hover,
+    .button-group a:hover {
+        background: var(--light-bg);
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .button-group button.active,
+    .button-group a.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    @media (max-width: 768px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .grid-2 {
+            grid-template-columns: 1fr;
+        }
+
+        .sitms-hero {
+            padding: 24px 16px;
+        }
+
+        .sitms-hero h1 {
+            font-size: 24px;
+        }
+
+        .table {
+            font-size: 12px;
+        }
+
+        .table thead th,
+        .table tbody td {
+            padding: 8px 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 24px;">
+    <!-- Hero Section -->
+    <div class="sitms-hero">
+        <h1>SITMS Dashboard</h1>
+        <p>Smart Industrial Training Matching System - Manage student placements with intelligent matching</p>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon primary">📊</div>
+            <div class="kpi-content">
+                <h3>Total Students</h3>
+                <p class="number">{{ total_students|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon success">🏢</div>
+            <div class="kpi-content">
+                <h3>Organizations</h3>
+                <p class="number">{{ total_organizations|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon info">✅</div>
+            <div class="kpi-content">
+                <h3>Placements</h3>
+                <p class="number">{{ total_placements|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon warning">⏳</div>
+            <div class="kpi-content">
+                <h3>Pending</h3>
+                <p class="number">{{ pending_applications|default:0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid-2">
+        <!-- Students Overview -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Recent Students</h2>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Course</th>
+                            <th>Level</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in recent_students %}
+                        <tr>
+                            <td><strong>{{ student.name|default:"Anonymous" }}</strong></td>
+                            <td>{{ student.course|default:"N/A" }}</td>
+                            <td>{{ student.level|default:"N/A" }}</td>
+                            <td>
+                                <span class="badge badge-success">Active</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted);">
+                                No students registered yet
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Organizations Overview -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Active Organizations</h2>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Organization</th>
+                            <th>Industry</th>
+                            <th>Slots</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for org in active_organizations %}
+                        <tr>
+                            <td><strong>{{ org.name|default:"Organization" }}</strong></td>
+                            <td>{{ org.industry|default:"N/A" }}</td>
+                            <td><span class="badge badge-info">5/10</span></td>
+                            <td>⭐ 4.8</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted);">
+                                No organizations registered
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Placement Analytics -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Placement Analytics</h2>
+        </div>
+        <div class="card-body">
+            <div class="grid-2">
+                <!-- Placement Status Distribution -->
+                <div>
+                    <h3 style="margin-top: 0; color: var(--text-primary);">Status Distribution</h3>
+                    <div class="stat-item">
+                        <div class="stat-label">Accepted Placements</div>
+                        <div class="stat-value" style="color: var(--success);">{{ accepted_placements|default:0 }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Pending Applications</div>
+                        <div class="stat-value" style="color: var(--warning);">{{ pending_applications|default:0 }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Rejected Applications</div>
+                        <div class="stat-value" style="color: var(--danger);">{{ rejected_applications|default:0 }}</div>
+                    </div>
+                </div>
+
+                <!-- Match Quality Metrics -->
+                <div>
+                    <h3 style="margin-top: 0; color: var(--text-primary);">Match Quality</h3>
+                    <div class="stat-item">
+                        <div class="stat-label">Highly Matched (80%+)</div>
+                        <div class="stat-value">{{ high_match_count|default:0 }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Partially Matched (60-79%)</div>
+                        <div class="stat-value">{{ medium_match_count|default:0 }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Low Match (below 60%)</div>
+                        <div class="stat-value">{{ low_match_count|default:0 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Applications -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Pending Applications Requiring Action</h2>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Organization</th>
+                        <th>Applied Date</th>
+                        <th>Match Score</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in pending_apps %}
+                    <tr>
+                        <td><strong>{{ app.student|default:"Student" }}</strong></td>
+                        <td>{{ app.organization|default:"Organization" }}</td>
+                        <td>{{ app.applied_date|default:"N/A"|date:"Y-m-d" }}</td>
+                        <td>
+                            <span class="match-score high">
+                                <span>✓</span>
+                                92% - Highly Matched
+                            </span>
+                        </td>
+                        <td class="action-buttons">
+                            <a href="#" class="btn-small" style="color: var(--success);">✓ Approve</a>
+                            <a href="#" class="btn-small" style="color: var(--danger);">✕ Reject</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted);">
+                            No pending applications
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Quick Actions</h2>
+        </div>
+        <div class="card-body">
+            <div class="button-group">
+                <a href="#" class="active">📊 View All Placements</a>
+                <a href="#">👨‍🎓 Manage Students</a>
+                <a href="#">🏢 Manage Organizations</a>
+                <a href="#">📋 Generate Reports</a>
+                <a href="#">⚙️ System Settings</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh dashboard data every 5 minutes
+    setInterval(function() {
+        location.reload();
+    }, 300000);
+});
+</script>
+{% endblock %}
