@@ -24,7 +24,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
   void _loadApplications() {
     final student = context.read<AuthProvider>().currentStudent;
     if (student != null) {
-      context.read<ApplicationProvider>().fetchApplications(student.id);
+      context.read<ApplicationProvider>().fetchApplications();
     }
   }
 

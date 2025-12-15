@@ -38,9 +38,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
-    
+
     final success = await context.read<AuthProvider>().login(
-      email: _emailController.text,
+      username: _emailController.text,
       password: _passwordController.text,
     );
 
@@ -64,17 +64,20 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     
     final success = await context.read<AuthProvider>().register(
-      fullName: _nameController.text,
+      username: _emailController.text,
       email: _emailController.text,
       password: _passwordController.text,
+      password2: _passwordController.text,
+      firstName: _nameController.text.split(' ').first,
+      lastName: _nameController.text.split(' ').skip(1).join(' ').isEmpty
+        ? 'User'
+        : _nameController.text.split(' ').skip(1).join(' '),
       registrationNumber: _regNumberController.text,
-      institution: 'University of Dar es Salaam',
-      level: 'Degree',
-      course: 'Information Technology',
-      department: 'Engineering',
-      skills: ['Python', 'Web Development'],
-      preferredLocation: 'Dar es Salaam',
+      institution: 1,
+      course: 1,
+      academicLevel: 'degree',
       phone: _phoneController.text,
+      preferredLocation: 'Dar es Salaam',
     );
 
     setState(() => _isLoading = false);

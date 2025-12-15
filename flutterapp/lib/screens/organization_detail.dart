@@ -6,7 +6,7 @@ import '../providers/application_provider.dart';
 import '../theme/app_theme.dart';
 
 class OrganizationDetailScreen extends StatefulWidget {
-  final String organizationId;
+  final int organizationId;
 
   const OrganizationDetailScreen({
     Key? key,
@@ -308,18 +308,19 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
   }
 
   Future<void> _handleApply() async {
-    final org = context.read<OrganizationProvider>().selectedOrganization;
-    if (org == null) return;
+    // TODO: This should be refactored to show training opportunities
+    // For now, this is a placeholder. The actual implementation should:
+    // 1. Fetch training opportunities for this organization
+    // 2. Let user select which opportunity to apply to
+    // 3. Call applyToOpportunity with the selected opportunity ID
 
-    setState(() => _isApplying = true);
-
-    final success = await context.read<ApplicationProvider>().applyToOrganization(
-      studentId: '1',
-      organizationId: org.id,
-      organizationName: org.name,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please select a specific training opportunity to apply'),
+        backgroundColor: AppTheme.warningColor,
+      ),
     );
-
-    setState(() => _isApplying = false);
+    return;
 
     if (success) {
       if (!mounted) return;

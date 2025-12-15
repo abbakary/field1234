@@ -1,142 +1,214 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/student.dart';
+import '../services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
   Student? _currentStudent;
   String? _authToken;
   String? _errorMessage;
+  bool _isLoading = false;
 
   bool get isAuthenticated => _isAuthenticated;
   Student? get currentStudent => _currentStudent;
   String? get authToken => _authToken;
   String? get errorMessage => _errorMessage;
+  bool get isLoading => _isLoading;
 
   AuthProvider() {
     _initializeAuth();
   }
 
   Future<void> _initializeAuth() async {
-    final prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString('auth_token');
-    final studentJson = prefs.getString('student');
-    
-    if (_authToken != null && studentJson != null) {
-      _isAuthenticated = true;      
+    try {
+      await ApiService.initialize();
+      final token = ApiService.getAuthToken();
+      if (token != null) {
+        _authToken = token;
+        _isAuthenticated = true;
+        // Try to fetch current user profile
+        await fetchUserProfile();
+      }
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Failed to initialize authentication: ${e.toString()}';
       notifyListeners();
     }
   }
 
   Future<bool> login({
-    required String email,
+    required String username,
     required String password,
   }) async {
     try {
+      _isLoading = true;
       _errorMessage = null;
-      
-      final prefs = await SharedPreferences.getInstance();
-      _authToken = 'token_$email';
-      
-      _currentStudent = Student(
-        id: '1',
-        fullName: 'John Doe',
-        registrationNumber: 'REG001',
-        institution: 'University of Dar es Salaam',
-        level: 'Degree',
-        course: 'Information Technology',
-        department: 'Engineering',
-        skills: ['Python', 'Web Development', 'Database Design'],
-        preferredLocation: 'Dar es Salaam',
-        email: email,
-        phone: '+255123456789',
-        createdAt: DateTime.now(),
-      );
-      
-      await prefs.setString('auth_token', _authToken!);
-      await prefs.setString('student', _currentStudent!.id);
-      
-      _isAuthenticated = true;
       notifyListeners();
-      return true;
+
+      final result = await ApiService.studentLogin(
+        username: username,
+        password: password,
+      );
+
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        _authToken = data['token']?.toString();
+        
+        // Parse student data if available
+        if (data.containsKey('student') && data['student'] is Map) {
+          _currentStudent = Student.fromJson(data['student'] as Map<String, dynamic>);
+        }
+
+        _isAuthenticated = true;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error']?.toString() ?? 'Login failed';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = 'Network error: ${e.toString()}';
+      _isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
   Future<bool> register({
-    required String fullName,
+    required String username,
     required String email,
     required String password,
+    required String password2,
+    required String firstName,
+    required String lastName,
     required String registrationNumber,
-    required String institution,
-    required String level,
-    required String course,
-    required String department,
-    required List<String> skills,
-    required String preferredLocation,
+    required int institution,
+    required int course,
+    required String academicLevel,
     required String phone,
+    String? preferredLocation,
   }) async {
     try {
+      _isLoading = true;
       _errorMessage = null;
-      
-      final prefs = await SharedPreferences.getInstance();
-      _authToken = 'token_$email';
-      
-      _currentStudent = Student(
-        id: '${DateTime.now().millisecondsSinceEpoch}',
-        fullName: fullName,
+      notifyListeners();
+
+      final result = await ApiService.studentRegister(
+        username: username,
+        email: email,
+        password: password,
+        password2: password2,
+        firstName: firstName,
+        lastName: lastName,
         registrationNumber: registrationNumber,
         institution: institution,
-        level: level,
         course: course,
-        department: department,
-        skills: skills,
-        preferredLocation: preferredLocation,
-        email: email,
+        academicLevel: academicLevel,
         phone: phone,
-        createdAt: DateTime.now(),
+        preferredLocation: preferredLocation,
       );
-      
-      await prefs.setString('auth_token', _authToken!);
-      await prefs.setString('student', _currentStudent!.id);
-      
-      _isAuthenticated = true;
-      notifyListeners();
-      return true;
+
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        _authToken = data['token']?.toString();
+        
+        // Parse student data if available
+        if (data.containsKey('student') && data['student'] is Map) {
+          _currentStudent = Student.fromJson(data['student'] as Map<String, dynamic>);
+        }
+
+        _isAuthenticated = true;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error']?.toString() ?? 'Registration failed';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = 'Network error: ${e.toString()}';
+      _isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
+  Future<void> fetchUserProfile() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final result = await ApiService.userProfile();
+
+      if (result['success']) {
+        final data = result['data'] as Map<String, dynamic>;
+        
+        // Check if user is a student
+        if (data.containsKey('type') && data['type'] == 'student') {
+          if (data.containsKey('profile') && data['profile'] is Map) {
+            _currentStudent = Student.fromJson(data['profile'] as Map<String, dynamic>);
+          }
+        }
+
+        _isLoading = false;
+        notifyListeners();
+      } else {
+        _errorMessage = result['error']?.toString();
+        _isLoading = false;
+        notifyListeners();
+      }
+    } catch (e) {
+      _errorMessage = 'Failed to fetch profile: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> logout() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('auth_token');
-      await prefs.remove('student');
-      
+      _isLoading = true;
+      notifyListeners();
+
+      await ApiService.clearAuthToken();
+
       _isAuthenticated = false;
       _currentStudent = null;
       _authToken = null;
       _errorMessage = null;
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = 'Failed to logout: ${e.toString()}';
+      _isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> updateProfile(Student student) async {
     try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      // TODO: Implement update profile endpoint in API if needed
       _currentStudent = student;
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = 'Failed to update profile: ${e.toString()}';
+      _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 }
