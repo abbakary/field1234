@@ -185,6 +185,19 @@ class Application {
     }
   }
 
+  String get organizationName {
+    if (organizationDetail is Map<String, dynamic>) {
+      return organizationDetail!['name'] ?? 'Unknown Organization';
+    }
+    return 'Unknown Organization';
+  }
+
+  String get matchType {
+    return matchQuality.replaceAll('_', ' ').toUpperCase();
+  }
+
+  String get matchScoreString => matchScore.toString();
+
   factory Application.fromJson(Map<String, dynamic> json) {
     List<ApplicationStatusHistory> parseStatusHistory(dynamic historyData) {
       if (historyData == null) return [];
