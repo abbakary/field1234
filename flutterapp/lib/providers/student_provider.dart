@@ -58,16 +58,22 @@ class StudentProvider extends ChangeNotifier {
       );
 
       if (result['success']) {
-        final data = result['data'] as Map<String, dynamic>;
-        
-        // Handle pagination
-        if (data.containsKey('results')) {
-          final results = data['results'] as List;
-          _institutions = results.map((inst) {
-            return Institution.fromJson(inst as Map<String, dynamic>);
-          }).toList();
+        final data = result['data'];
+
+        // Handle different API response formats
+        if (data is Map<String, dynamic>) {
+          // Check for paginated response
+          if (data.containsKey('results')) {
+            final results = data['results'] as List;
+            _institutions = results.map((inst) {
+              return Institution.fromJson(inst as Map<String, dynamic>);
+            }).toList();
+          } else {
+            _institutions = [];
+          }
         } else if (data is List) {
-          _institutions = data.map((inst) {
+          // Direct list response
+          _institutions = (data as List).map((inst) {
             return Institution.fromJson(inst as Map<String, dynamic>);
           }).toList();
         } else {
@@ -103,16 +109,22 @@ class StudentProvider extends ChangeNotifier {
       );
 
       if (result['success']) {
-        final data = result['data'] as Map<String, dynamic>;
-        
-        // Handle pagination
-        if (data.containsKey('results')) {
-          final results = data['results'] as List;
-          _availableSkills = results.map((skill) {
-            return Skill.fromJson(skill as Map<String, dynamic>);
-          }).toList();
+        final data = result['data'];
+
+        // Handle different API response formats
+        if (data is Map<String, dynamic>) {
+          // Check for paginated response
+          if (data.containsKey('results')) {
+            final results = data['results'] as List;
+            _availableSkills = results.map((skill) {
+              return Skill.fromJson(skill as Map<String, dynamic>);
+            }).toList();
+          } else {
+            _availableSkills = [];
+          }
         } else if (data is List) {
-          _availableSkills = data.map((skill) {
+          // Direct list response
+          _availableSkills = (data as List).map((skill) {
             return Skill.fromJson(skill as Map<String, dynamic>);
           }).toList();
         } else {
