@@ -47,22 +47,27 @@ class ApplicationProvider extends ChangeNotifier {
       );
 
       if (result['success']) {
-        final data = result['data'] as Map<String, dynamic>;
-        
-        // Handle pagination
-        if (data.containsKey('results')) {
-          // Standard DRF pagination response
-          final results = data['results'] as List;
-          _applications = results.map((app) {
-            return Application.fromJson(app as Map<String, dynamic>);
-          }).toList();
-          
-          // Extract pagination info
-          _currentPage = page;
-          _totalPages = ((data['count'] ?? 0) as int) ~/ 20 + 1;
+        final data = result['data'];
+
+        // Handle different API response formats
+        if (data is Map<String, dynamic>) {
+          // Check for paginated response
+          if (data.containsKey('results')) {
+            // Standard DRF pagination response
+            final results = data['results'] as List;
+            _applications = results.map((app) {
+              return Application.fromJson(app as Map<String, dynamic>);
+            }).toList();
+
+            // Extract pagination info
+            _currentPage = page;
+            _totalPages = ((data['count'] ?? 0) as int) ~/ 20 + 1;
+          } else {
+            _applications = [];
+          }
         } else if (data is List) {
-          // Simple list response
-          _applications = data.map((app) {
+          // Direct list response
+          _applications = (data as List).map((app) {
             return Application.fromJson(app as Map<String, dynamic>);
           }).toList();
         } else {

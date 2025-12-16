@@ -99,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     items: [
                       _buildProfileItem(
                         label: 'Institution',
-                        value: student.institution,
+                        value: student.institutionName ?? '',
                       ),
                       _buildProfileItem(
                         label: 'Level',
@@ -107,11 +107,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _buildProfileItem(
                         label: 'Course',
-                        value: student.course,
+                        value: student.courseName ?? '',
                       ),
                       _buildProfileItem(
                         label: 'Department',
-                        value: student.department,
+                        value: student.departmentName ?? '',
                       ),
                     ],
                   ),
@@ -145,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       runSpacing: 8,
                       children: student.skills.map((skill) {
                         return Chip(
-                          label: Text(skill),
+                          label: Text(skill.name),
                           backgroundColor:
                               AppTheme.primaryColor.withOpacity(0.1),
                           labelStyle: const TextStyle(

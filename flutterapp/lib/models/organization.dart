@@ -72,6 +72,9 @@ class Organization {
   final bool isActive;
   final double rating;
   final int reviewCount;
+  final int totalSlots;
+  final int remainingSlots;
+  final String trainingDuration;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -95,11 +98,14 @@ class Organization {
     required this.isActive,
     required this.rating,
     required this.reviewCount,
+    required this.totalSlots,
+    required this.remainingSlots,
+    required this.trainingDuration,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  bool get isSlotsAvailable => true; // This would depend on training opportunities
+  bool get isSlotsAvailable => remainingSlots > 0;
 
   factory Organization.fromJson(Map<String, dynamic> json) {
     List<Course> parseCourses(dynamic coursesData) {
@@ -160,6 +166,9 @@ class Organization {
       isActive: json['is_active'] ?? true,
       rating: (json['rating'] ?? 0).toDouble(),
       reviewCount: json['review_count'] ?? 0,
+      totalSlots: json['total_slots'] ?? 0,
+      remainingSlots: json['remaining_slots'] ?? 0,
+      trainingDuration: json['training_duration'] ?? '0 months',
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'].toString())
           : DateTime.now(),
@@ -190,6 +199,9 @@ class Organization {
       'is_active': isActive,
       'rating': rating,
       'review_count': reviewCount,
+      'total_slots': totalSlots,
+      'remaining_slots': remainingSlots,
+      'training_duration': trainingDuration,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

@@ -240,7 +240,7 @@ class ApplicationCard extends StatelessWidget {
   }
 
   Color _getMatchColor() {
-    final score = int.tryParse(application.matchScore ?? '0') ?? 0;
+    final score = application.matchScore;
     if (score >= 80) return AppTheme.successColor;
     if (score >= 60) return AppTheme.warningColor;
     return AppTheme.errorColor;

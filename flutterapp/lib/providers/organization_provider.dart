@@ -38,22 +38,27 @@ class OrganizationProvider extends ChangeNotifier {
       );
 
       if (result['success']) {
-        final data = result['data'] as Map<String, dynamic>;
-        
-        // Handle pagination
-        if (data.containsKey('results')) {
-          // Standard DRF pagination response
-          final results = data['results'] as List;
-          _organizations = results.map((org) {
-            return Organization.fromJson(org as Map<String, dynamic>);
-          }).toList();
-          
-          // Extract pagination info
-          _currentPage = page;
-          _totalPages = ((data['count'] ?? 0) as int) ~/ 20 + 1;
+        final data = result['data'];
+
+        // Handle different API response formats
+        if (data is Map<String, dynamic>) {
+          // Check for paginated response
+          if (data.containsKey('results')) {
+            // Standard DRF pagination response
+            final results = data['results'] as List;
+            _organizations = results.map((org) {
+              return Organization.fromJson(org as Map<String, dynamic>);
+            }).toList();
+
+            // Extract pagination info
+            _currentPage = page;
+            _totalPages = ((data['count'] ?? 0) as int) ~/ 20 + 1;
+          } else {
+            _organizations = [];
+          }
         } else if (data is List) {
-          // Simple list response
-          _organizations = data.map((org) {
+          // Direct list response
+          _organizations = (data as List).map((org) {
             return Organization.fromJson(org as Map<String, dynamic>);
           }).toList();
         } else {

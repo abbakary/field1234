@@ -55,6 +55,8 @@ class Student {
   final DateTime registeredAt;
   final DateTime updatedAt;
 
+  String get level => academicLevel;
+
   Student({
     required this.id,
     required this.user,

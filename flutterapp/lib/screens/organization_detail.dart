@@ -183,7 +183,7 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                         runSpacing: 8,
                         children: org.supportedCourses.map((course) {
                           return Chip(
-                            label: Text(course),
+                            label: Text(course.name),
                             backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                             labelStyle: const TextStyle(color: AppTheme.primaryColor),
                           );
@@ -209,7 +209,7 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                         runSpacing: 8,
                         children: org.requiredSkills.map((skill) {
                           return Chip(
-                            label: Text(skill),
+                            label: Text(skill.name),
                             backgroundColor: AppTheme.secondaryColor.withOpacity(0.1),
                             labelStyle: const TextStyle(color: AppTheme.secondaryColor),
                           );
@@ -308,32 +308,12 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
   }
 
   Future<void> _handleApply() async {
-    // TODO: This should be refactored to show training opportunities
-    // For now, this is a placeholder. The actual implementation should:
-    // 1. Fetch training opportunities for this organization
-    // 2. Let user select which opportunity to apply to
-    // 3. Call applyToOpportunity with the selected opportunity ID
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Please select a specific training opportunity to apply'),
         backgroundColor: AppTheme.warningColor,
       ),
     );
-    return;
-
-    if (success) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Application submitted successfully!'),
-          backgroundColor: AppTheme.successColor,
-        ),
-      );
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) Navigator.pop(context);
-      });
-    }
   }
 
   Widget _buildInfoCard({

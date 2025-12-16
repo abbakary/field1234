@@ -144,7 +144,7 @@ class OrganizationCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        course,
+                        course.name,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppTheme.primaryColor,
                           fontSize: 11,

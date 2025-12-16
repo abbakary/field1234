@@ -49,7 +49,7 @@ class DashboardHeader extends StatelessWidget {
                 child: _buildInfoCard(
                   context,
                   label: 'Course',
-                  value: student.course,
+                  value: student.courseName ?? 'Not Set',
                   icon: Icons.menu_book_outlined,
                 ),
               ),
