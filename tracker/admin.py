@@ -520,7 +520,7 @@ class SystemConfigAdmin(admin.ModelAdmin):
     list_display = ('key', 'value_preview', 'is_active', 'updated_at')
     list_filter = ('is_active', 'key', 'updated_at')
     search_fields = ('key', 'value', 'description')
-    readonly_fields = ('updated_at', 'created_at')
+    readonly_fields = ('updated_at',)
     
     fieldsets = (
         ('Configuration', {
